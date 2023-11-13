@@ -1,0 +1,177 @@
+[
+  {
+    "type": "Attractions",
+    "name": "CN Tower",
+    "coordinates": [43.643138669020644, -79.38708942156599],
+    "address": "290 Bremner Blvd, Toronto, ON M5V 3L9"
+  }, {
+    "type": "Attractions",
+    "name": "Casa Loma",
+    "coordinates": [43.68563407535542, -79.4112403505008],
+    "address": "1 Austin Terrace, Toronto, ON M5R 1X8"
+  }, {
+    "type": "Attractions",
+    "name": "Distillery Historic District",
+    "coordinates": [43.6503557090244, -79.35912981376809],
+    "address": "55 Mill Street, Toronto ON, M5A 3C4"
+  }, {
+    "type": "Attractions",
+    "name": "Nathan Phillips Square",
+    "coordinates": [43.65284659974952, -79.38338151537272],
+    "address": "100 Queen St W, Toronto, ON M5H 2N1"
+  }, {
+    "type": "Attractions",
+    "name": "Kensington Market",
+    "coordinates": [43.655315203558175, -79.39991399886672],
+    "address": "249 Augusta Ave, Toronto, ON M5T 2L8"
+  }, {
+    "type": "Attractions",
+    "name": "Yonge-Dundas Square",
+    "coordinates": [43.65619231740896, -79.38019270955529],
+    "address": "1 Dundas Street East, Toronto, ON M5B 2R8"
+  }, {
+    "type": "Attractions",
+    "name": "Toronto Union Station",
+    "coordinates": [43.64540470808842, -79.38063210188251],
+    "address": "141 Bay St, Toronto, ON M5J 1J5"
+  }, {
+    "type": "Attractions",
+    "name": "St. James Anglican Cathedral",
+    "coordinates": [43.67081273293886, -79.37444471627487],
+    "address": "106 King St E, Toronto, ON M5C 2E9"
+  },{
+
+    "type": "Museum & Art",
+    "name": "The Elgin & Winter Garden Theatre Centre",
+    "coordinates": [43.65322596286999, -79.37937434420928],
+    "address": "189 Yonge St, Toronto, ON M5B 1M4"
+  }, {
+    "type": "Museum & Art",
+    "name": "Royal Ontario Museum",
+    "coordinates": [43.667864886343914, -79.39477710188196],
+    "address": "100 Queens Park, Toronto, ON M5S 2C6"
+  }, {
+    "type": "Museum & Art",
+    "name": "Royal Conservatory of Music",
+    "coordinates": [43.66813454638431, -79.39630294420888],
+    "address": "273 Bloor St W, Toronto, ON M5S 1W2"
+  }, {
+    "type": "Museum & Art",
+    "name": "Spadina Museum",
+    "coordinates": [43.6791641757453, -79.40827594791969],
+    "address": "285 Spadina Rd, Toronto, ON M5R 2V5"
+  }, {
+    "type": "Museum & Art",
+    "name": "Graffiti Alley",
+    "coordinates": [43.64813404397044, -79.398506188392],
+    "address": "513 Queen Street W. Toronto, ON M5V 2B4"
+  },{
+
+    "type": "Sports & Leisure",
+    "name": "Rogers Centre",
+    "coordinates": [43.64195838155772, -79.3891651181139],
+    "address": "1 Blue Jays Way, Toronto, ON M5V 1J1"
+  }, {
+    "type": "Sports & Leisure",
+    "name": "Scotiabank Arena",
+    "coordinates": [43.64362911290746, -79.37904525770006],
+    "address": "40 Bay St, Toronto, ON M5J 2X2"
+  }, {
+    "type": "Sports & Leisure",
+    "name": "Scarborough Bluffs",
+    "coordinates": [43.70617663626793, -79.2316381500254],
+    "address": "1 Brimley Rd. S. Scarborough, ON"
+  }, {
+    "type": "Sports & Leisure",
+    "name": "Toronto Harbour",
+    "coordinates": [43.63987366174182, -79.38009273082257],
+    "address": "145 Queens Quay W. Toronto, ON M5J 2H4"
+  }, {
+    "type": "Sports & Leisure",
+    "name": "Evergreen Brick Works",
+    "coordinates": [43.6846016211084, -79.36471804490075],
+    "address": "550 Bayview Ave, Toronto, ON M4W 3X8"
+  },{
+
+    "type": "Heritage",
+    "name": "Black Creek Pioneer Village",
+    "coordinates": [43.77359371267254, -79.5168772153695],
+    "address": "1000 Murray Ross Pkwy, Toronto, ON M3J 2P3"
+  }, {
+    "type": "Heritage",
+    "name": "The Beach Village",
+    "coordinates": [43.66988780169719, -79.30096878425519],
+    "address": "1971 Queen St E #203, Toronto, ON M4L 1H9"
+  }, {
+    "type": "Heritage",
+    "name": "Toronto City Hall",
+    "coordinates": [43.65356781182126, -79.38406884651336],
+    "address": "100 Queen St W, Toronto, ON M5H 2N2"
+  }, {
+    "type": "Heritage",
+    "name": "Toronto Old City Hall",
+    "coordinates": [43.6526750256185, -79.3817156018823],
+    "address": "60 Queen St W, Toronto, ON M5H 2M3"
+  }, {
+    "type": "Heritage",
+    "name": "Yorkville Village",
+    "coordinates": [43.6719820495385, -79.3950606368866],
+    "address": "55 Avenue Rd Suite 2250, Toronto, ON M5R 3L2"
+  }, {
+    "type": "Heritage",
+    "name": "Chinatown",
+    "coordinates": [43.65280377831569, -79.39834924870331],
+    "address": "222 Spadina Avenue. Toronto, ON M5T 3B3"
+  }, {
+    "type": "Heritage",
+    "name": "Harbourfront Centre",
+    "coordinates": [43.6390047899613, -79.3818892307192],
+    "address": "235 Queens Quay W, Toronto, ON M5J 2G8"
+  }, {
+    "type": "Heritage",
+    "name": "Bloor West Village",
+    "coordinates": [43.65116156002593, -79.47626922328907],
+    "address": "Bloor West Village, Toronto, ON M6S 3R1"
+  }, {
+    "type": "Heritage",
+    "name": "Cabbagetown",
+    "coordinates": [43.66444557807874, -79.36851969953061],
+    "address": "237 Carlton St, Toronto, ON M5A 2L2"
+  },{
+
+    "type": "Universities & Colleges",
+    "name": "Centennial College",
+    "coordinates": [43.786043496046865, -79.22812544240335],
+    "address": "941 Progress Ave, Scarborough,. ON M1G 3T8"
+  }, {
+    "type": "Universities & Colleges",
+    "name": "University of Toronto",
+    "coordinates": [43.66590772815984, -79.3956573472173],
+    "address": "27 King's College Cir, Toronto, ON M5S 1A1"
+  }, {
+    "type": "Universities & Colleges",
+    "name": "University of Toronto Scarborough",
+    "coordinates": [43.785570348955765, -79.18798788427102],
+    "address": "1265 Military Trail, Scarborough, ON M1C 1A4"
+  }, {
+    "type": "Universities & Colleges",
+    "name": "York University",
+    "coordinates": [43.773685854700716, -79.50185766146042],
+    "address": "4700 Keele St, Toronto, ON M3J 1P3"
+  }, {
+    "type": "Universities & Colleges",
+    "name": "Trinity College",
+    "coordinates": [43.66523270036839, -79.39564205893255],
+    "address": "6 Hoskin Ave, Toronto, ON M5S 1H8"
+  }, {
+    "type": "Universities & Colleges",
+    "name": "Toronto Metropolitan University",
+    "coordinates": [43.65807349972248, -79.37423658913268],
+    "address": "350 Victoria St, Toronto, ON M5B 2K3"
+  }, {
+    "type": "Universities & Colleges",
+    "name": "OCAD University",
+    "coordinates": [43.65335910369654, -79.39148446147325],
+    "address": "100 McCaul St, Toronto, ON M5T 1W1"
+  }
+]
