@@ -35,7 +35,7 @@
             android:id="@+id/rvPlaces"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/round_background"
+            android:background="@drawable/round_black_background"
             app:layout_constraintBottom_toTopOf="@id/tvPhotoBy"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
