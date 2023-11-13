@@ -42,7 +42,7 @@ class LandmarkActivity : AppCompatActivity() {
                     textSize = 32.0f
                     textAlignment = View.TEXT_ALIGNMENT_CENTER
                     setTextColor(ContextCompat.getColor(context, R.color.teal_700))
-                    setShadowLayer(1.6f, 1.5f, 1.3f, ContextCompat.getColor(context, R.color.teal_200))
+                    setShadowLayer(1.6f, 1.5f, 1.3f, Color.BLACK)
                 }
                 textView.setOnClickListener {
                     val category = (it as TextView).text

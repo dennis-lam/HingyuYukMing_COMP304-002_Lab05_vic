@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.hingyuyukming_comp304_002_lab05.databinding.ActivityPlacesBinding
@@ -46,7 +47,7 @@ class PlacesActivity : AppCompatActivity() {
                 textView.run {
                     textSize = 24.0f
                     textAlignment = View.TEXT_ALIGNMENT_CENTER
-                    setTextColor(Color.MAGENTA)
+                    setTextColor(ContextCompat.getColor(context, R.color.purple_200))
                     setShadowLayer(1.6f, 1.5f, 1.3f, Color.BLACK)
                 }
                 textView.setOnClickListener {
