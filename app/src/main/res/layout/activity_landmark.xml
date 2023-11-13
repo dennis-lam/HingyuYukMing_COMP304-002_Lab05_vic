@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".LandmarkActivity">
 
     <ImageView
@@ -11,6 +12,7 @@
         android:layout_height="match_parent"
         android:contentDescription="@string/cover_image_references"
         android:scaleType="centerCrop"
+        android:alpha="0.7"
         android:src="@drawable/maarten_van_den_heuvel_unsplash" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -18,25 +20,26 @@
         android:layout_height="match_parent"
         android:padding="10dp">
 
-        <TextView
-            android:id="@+id/tvTitle"
+        <ImageView
+            android:id="@+id/ivLogo"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Welcome to Toronto"
-            android:textAlignment="center"
-            android:textSize="36sp"
+            android:layout_height="100dp"
+            app:srcCompat="@drawable/logo"
+            android:layout_marginTop="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvCategories"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/round_background"
             app:layout_constraintBottom_toTopOf="@id/tvPhotoBy"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle"/>
+            app:layout_constraintTop_toBottomOf="@id/ivLogo"
+            app:layout_constraintVertical_bias="0.3" />
 
         <TextView
             android:id="@+id/tvPhotoBy"

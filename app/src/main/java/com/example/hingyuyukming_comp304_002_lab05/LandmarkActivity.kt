@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.hingyuyukming_comp304_002_lab05.databinding.ActivityLandmarkBinding
@@ -40,8 +41,8 @@ class LandmarkActivity : AppCompatActivity() {
                 textView.run {
                     textSize = 32.0f
                     textAlignment = View.TEXT_ALIGNMENT_CENTER
-                    setTextColor(Color.MAGENTA)
-                    setShadowLayer(1.6f, 1.5f, 1.3f, Color.BLACK)
+                    setTextColor(ContextCompat.getColor(context, R.color.teal_700))
+                    setShadowLayer(1.6f, 1.5f, 1.3f, ContextCompat.getColor(context, R.color.teal_200))
                 }
                 textView.setOnClickListener {
                     val category = (it as TextView).text
