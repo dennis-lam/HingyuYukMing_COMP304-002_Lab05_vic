@@ -10,17 +10,23 @@ import android.widget.CompoundButton
 import android.widget.Toast
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.annotation.SuppressLint
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.hingyuyukming_comp304_002_lab05.databinding.ActivityMapsBinding
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.android.material.slider.Slider
 
-data class MapDisplay(var placeName: String, var userLatLng: LatLng?)
+data class MarkersData(var placeName: String, var userLatLng: LatLng?)
 
 class MapsActivity : AppCompatActivity(),
     OnMapReadyCallback,
@@ -38,9 +44,12 @@ class MapsActivity : AppCompatActivity(),
     private var zoom = 15.0f
     private var tilt = 0.0f
 
+    private lateinit var markersData: MarkersData
+
+    // Declare user location information
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
     private val locationRequestCode = 12345
-    private lateinit var currentDisplay: MapDisplay
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +60,7 @@ class MapsActivity : AppCompatActivity(),
         val landmarks = (application as LandmarkApplication).landmarks
         thePlaces = landmarks.getPlaces(theCategory)
         thePlaceNames = thePlaces.keys.toList()
-        currentDisplay = MapDisplay(
+        markersData = MarkersData(
             intent.getStringExtra("place") ?: thePlaceNames.first(),
             null
         )
@@ -73,7 +82,7 @@ class MapsActivity : AppCompatActivity(),
                 android.R.layout.simple_spinner_item,
                 thePlaceNames
             )
-            it.setSelection(thePlaceNames.indexOf(currentDisplay.placeName))
+            it.setSelection(thePlaceNames.indexOf(markersData.placeName))
             it.onItemSelectedListener = object : OnItemSelectedListener {
                 override fun onItemSelected(
                     adapterView: AdapterView<*>?,
@@ -81,7 +90,7 @@ class MapsActivity : AppCompatActivity(),
                     position: Int,
                     id: Long
                 ) {
-                    currentDisplay.placeName = thePlaceNames[position]
+                    markersData.placeName = thePlaceNames[position]
                     updateDisplay()
                 }
 
@@ -99,7 +108,16 @@ class MapsActivity : AppCompatActivity(),
             ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), locationRequestCode)
         } else {
-            updateCurrentLocation()
+            startUserLocationScheduler()
+        }
+
+        // Location callback
+        locationCallback = object : LocationCallback() {
+             override fun onLocationResult(locationResult: LocationResult) {
+                 val lastLocation = locationResult.lastLocation ?: return
+                 markersData.userLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
+                 updateDisplay()
+            }
         }
     }
 
@@ -108,7 +126,7 @@ class MapsActivity : AppCompatActivity(),
         when (requestCode) {
             locationRequestCode -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    updateCurrentLocation()
+                    startUserLocationScheduler()
                 } else {
                     Toast.makeText(this, getString(R.string.get_user_location_error_message), Toast.LENGTH_SHORT).show()
                 }
@@ -117,16 +135,22 @@ class MapsActivity : AppCompatActivity(),
         }
     }
 
-    private fun updateCurrentLocation() {
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener {
-                if (it == null) {
-                    Toast.makeText(this, getString(R.string.get_user_location_error_message), Toast.LENGTH_SHORT).show()
-                } else {
-                    currentDisplay.userLatLng = LatLng(it.latitude, it.longitude)
-                    updateDisplay()
-                }
-            }
+    @SuppressLint("MissingPermission")
+    private fun startUserLocationScheduler() {
+        // Set location settings
+        val locationRequest = LocationRequest.Builder(LocationRequest.PRIORITY_HIGH_ACCURACY, 5000).build()
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(this)
+        val task = client.checkLocationSettings(builder.build())
+        task.addOnSuccessListener {
+            // Start request update
+            fusedLocationClient.requestLocationUpdates(locationRequest,
+                locationCallback,
+                Looper.getMainLooper())
+        }
+        task.addOnFailureListener { exception ->
+            Toast.makeText(this, getString(R.string.get_user_location_error_message), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun getCameraPosition(
@@ -173,9 +197,9 @@ class MapsActivity : AppCompatActivity(),
 
     private fun updateDisplay() {
         // Obtain display information
-        val place = thePlaces[currentDisplay.placeName] ?: throw IllegalArgumentException("Invalid place: ${currentDisplay.placeName}")
+        val place = thePlaces[markersData.placeName] ?: throw IllegalArgumentException("Invalid place: ${markersData.placeName}")
         val placeLatLng = place.latLngOrDefault()
-        val userLatLng = currentDisplay.userLatLng
+        val userLatLng = markersData.userLatLng
         // Set address
         binding.tvAddress.text = place.address
         // Set map
@@ -229,7 +253,6 @@ class MapsActivity : AppCompatActivity(),
         binding.cbSatelliteMap.setOnCheckedChangeListener(this)
         binding.cbHybridMap.setOnCheckedChangeListener(this)
     }
-
 
     override fun onMapReady(googleMap: GoogleMap) {
         theMap = googleMap
