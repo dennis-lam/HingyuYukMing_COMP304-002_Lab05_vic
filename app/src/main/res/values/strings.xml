@@ -2,6 +2,7 @@
     <string name="app_name">HingyuYukMing_COMP304-002_Lab05</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="cover_image_references">Photo by Maarten van den Heuvel on Unsplash</string>
+    <string name="get_user_location_error_message">Unable to get your location.</string>
     <string-array name="places">
         <item>London</item>
         <item>Paris</item>

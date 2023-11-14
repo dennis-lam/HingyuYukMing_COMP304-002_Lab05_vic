@@ -1,6 +1,7 @@
 package com.example.hingyuyukming_comp304_002_lab05
 
 import android.content.Context
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 
 data class Place(
@@ -8,7 +9,14 @@ data class Place(
     val name: String,
     val coordinates: List<Double>,
     val address: String,
-)
+) {
+    // Obtain LatLng
+    fun latLngOrDefault() = if (coordinates.size != 2) {
+        LatLng(0.0,0.0)
+    } else {
+        LatLng(coordinates[0], coordinates[1])
+    }
+}
 
 class Landmarks (context: Context) {
     private var landmarks: Map<String, Map<String, Place>>

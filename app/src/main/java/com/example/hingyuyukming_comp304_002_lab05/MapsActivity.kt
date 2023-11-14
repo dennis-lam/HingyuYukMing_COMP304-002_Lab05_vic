@@ -1,19 +1,26 @@
 package com.example.hingyuyukming_comp304_002_lab05
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.ArrayAdapter
 import android.widget.CompoundButton
+import android.widget.Toast
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.hingyuyukming_comp304_002_lab05.databinding.ActivityMapsBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.google.android.material.slider.Slider
+
+data class MapDisplay(var placeName: String, var userLatLng: LatLng?)
 
 class MapsActivity : AppCompatActivity(),
     OnMapReadyCallback,
@@ -24,13 +31,16 @@ class MapsActivity : AppCompatActivity(),
     private var theMap: GoogleMap? = null
 
     private lateinit var theCategory: String
-    private lateinit var landmarks: Landmarks
     private lateinit var thePlaces: Map<String, Place>
     private lateinit var thePlaceNames: List<String>
-    private var selectedPlaceName: String = ""
     private var mapMarker: Marker? = null
+    private var userMarker: Marker? = null
     private var zoom = 15.0f
     private var tilt = 0.0f
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val locationRequestCode = 12345
+    private lateinit var currentDisplay: MapDisplay
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,10 +48,13 @@ class MapsActivity : AppCompatActivity(),
         setContentView(binding.root)
 
         theCategory = intent.getStringExtra("category") ?: "Attractions"
-        landmarks = (application as LandmarkApplication).landmarks
+        val landmarks = (application as LandmarkApplication).landmarks
         thePlaces = landmarks.getPlaces(theCategory)
         thePlaceNames = thePlaces.keys.toList()
-        selectedPlaceName = intent.getStringExtra("place") ?: thePlaceNames.first()
+        currentDisplay = MapDisplay(
+            intent.getStringExtra("place") ?: thePlaceNames.first(),
+            null
+        )
 
         actionBar?.title = theCategory
         supportActionBar?.title = theCategory
@@ -60,7 +73,7 @@ class MapsActivity : AppCompatActivity(),
                 android.R.layout.simple_spinner_item,
                 thePlaceNames
             )
-            it.setSelection(thePlaceNames.indexOf(selectedPlaceName))
+            it.setSelection(thePlaceNames.indexOf(currentDisplay.placeName))
             it.onItemSelectedListener = object : OnItemSelectedListener {
                 override fun onItemSelected(
                     adapterView: AdapterView<*>?,
@@ -68,7 +81,8 @@ class MapsActivity : AppCompatActivity(),
                     position: Int,
                     id: Long
                 ) {
-                    changeMarkerTo(thePlaceNames[position])
+                    currentDisplay.placeName = thePlaceNames[position]
+                    updateDisplay()
                 }
 
                 override fun onNothingSelected(adapterView: AdapterView<*>?) {}
@@ -78,6 +92,41 @@ class MapsActivity : AppCompatActivity(),
             tilt = value
             changeCamera(tilt = tilt)
         }
+
+        // Prepare location retrieval
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        if (ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), locationRequestCode)
+        } else {
+            updateCurrentLocation()
+        }
+    }
+
+    // Function to get requested permissions result
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when (requestCode) {
+            locationRequestCode -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    updateCurrentLocation()
+                } else {
+                    Toast.makeText(this, getString(R.string.get_user_location_error_message), Toast.LENGTH_SHORT).show()
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    private fun updateCurrentLocation() {
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener {
+                if (it == null) {
+                    Toast.makeText(this, getString(R.string.get_user_location_error_message), Toast.LENGTH_SHORT).show()
+                } else {
+                    currentDisplay.userLatLng = LatLng(it.latitude, it.longitude)
+                    updateDisplay()
+                }
+            }
     }
 
     private fun getCameraPosition(
@@ -122,29 +171,38 @@ class MapsActivity : AppCompatActivity(),
         }
     }
 
-    private fun changeMarkerTo(placeName: String) {
-        val pos = thePlaceNames.indexOf(placeName)
-        if (pos >= 0) {
-            binding.tvAddress.text = thePlaces[placeName]?.address
-            val coord = thePlaces[placeName]?.coordinates ?: listOf(0.0, 0.0)
-            val latLng = LatLng(coord[0], coord[1])
-            theMap?.apply {
-                val firstTimeAddMarker = mapMarker == null
-                mapMarker?.remove()
-                mapMarker = addMarker(
+    private fun updateDisplay() {
+        // Obtain display information
+        val place = thePlaces[currentDisplay.placeName] ?: throw IllegalArgumentException("Invalid place: ${currentDisplay.placeName}")
+        val placeLatLng = place.latLngOrDefault()
+        val userLatLng = currentDisplay.userLatLng
+        // Set address
+        binding.tvAddress.text = place.address
+        // Set map
+        theMap?.apply {
+            val firstTimeAddMarker = mapMarker == null
+            mapMarker?.remove()
+            mapMarker = addMarker(
+                MarkerOptions()
+                    .position(placeLatLng)
+                    .title(place.name)
+            )
+            userMarker?.remove()
+            if (userLatLng != null) {
+                userMarker = addMarker(
                     MarkerOptions()
-                        .position(latLng)
-                        .title(placeName)
-                )
-                changeCamera(
-                    lat = coord[0],
-                    lng = coord[1],
-                    bearing = 0.0f,
-                    tilt = tilt,
-                    zoom = if (firstTimeAddMarker) zoom else null,
-                    dontAnimate = firstTimeAddMarker
+                        .position(userLatLng)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_marker))
                 )
             }
+            changeCamera(
+                lat = placeLatLng.latitude,
+                lng = placeLatLng.longitude,
+                bearing = 0.0f,
+                tilt = tilt,
+                zoom = if (firstTimeAddMarker) zoom else null,
+                dontAnimate = firstTimeAddMarker
+            )
         }
     }
 
@@ -173,23 +231,11 @@ class MapsActivity : AppCompatActivity(),
     }
 
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
         theMap = googleMap
         theMap!!.uiSettings.apply {
             isZoomControlsEnabled = true
-            // isTiltGesturesEnabled = true
         }
-
-        // Add a marker in Sydney and move the camera
-        changeMarkerTo(selectedPlaceName)
+        updateDisplay()
     }
 }
