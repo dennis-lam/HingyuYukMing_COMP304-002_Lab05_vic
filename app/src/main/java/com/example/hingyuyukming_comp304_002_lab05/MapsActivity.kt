@@ -46,7 +46,7 @@ class MapsActivity : AppCompatActivity(),
 
     // Declare user location information
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
+    private lateinit var userLocationCallback: LocationCallback
     private val locationRequestCode = 12345
 
     // Declare maps model updater (e.g. markers)
@@ -92,7 +92,11 @@ class MapsActivity : AppCompatActivity(),
                     id: Long
                 ) {
                     markersData.placeName = thePlaceNames[position]
-                    updateDisplay()
+                    mapModelUpdater.clear()
+                    updateDisplay(
+                        shouldChangeCamera = true,
+                        shouldZoom = false
+                    )
                 }
 
                 override fun onNothingSelected(adapterView: AdapterView<*>?) {}
@@ -112,12 +116,15 @@ class MapsActivity : AppCompatActivity(),
             startUserLocationScheduler()
         }
 
-        // Location callback
-        locationCallback = object : LocationCallback() {
+        // User location callback
+        userLocationCallback = object : LocationCallback() {
              override fun onLocationResult(locationResult: LocationResult) {
                  val lastLocation = locationResult.lastLocation ?: return
                  markersData.userLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
-                 updateDisplay()
+                 updateDisplay(
+                     shouldChangeCamera = false,
+                     shouldZoom = false
+                 )
             }
         }
 
@@ -149,7 +156,7 @@ class MapsActivity : AppCompatActivity(),
         task.addOnSuccessListener {
             // Start request update
             fusedLocationClient.requestLocationUpdates(locationRequest,
-                locationCallback,
+                userLocationCallback,
                 Looper.getMainLooper())
         }
         task.addOnFailureListener { exception ->
@@ -199,7 +206,7 @@ class MapsActivity : AppCompatActivity(),
         }
     }
 
-    private fun updateDisplay() {
+    private fun updateDisplay(shouldChangeCamera: Boolean, shouldZoom: Boolean) {
         // Obtain display information
         val place = thePlaces[markersData.placeName] ?: throw IllegalArgumentException("Invalid place: ${markersData.placeName}")
         val placeLatLng = place.latLngOrDefault()
@@ -208,18 +215,18 @@ class MapsActivity : AppCompatActivity(),
         binding.tvAddress.text = place.address
         // Set map
         theMap?.apply {
-            val firstTimeAddMarker = mapModelUpdater.hasUpdated
             // Update map model
             mapModelUpdater.update(this, place.name, placeLatLng, userLatLng)
-            // TODO: Auto adjust issue after zoom
-            changeCamera(
-                lat = placeLatLng.latitude,
-                lng = placeLatLng.longitude,
-                bearing = 0.0f,
-                tilt = tilt,
-                zoom = if (firstTimeAddMarker) zoom else null,
-                dontAnimate = firstTimeAddMarker
-            )
+            if (shouldChangeCamera) {
+                changeCamera(
+                    lat = placeLatLng.latitude,
+                    lng = placeLatLng.longitude,
+                    bearing = 0.0f,
+                    tilt = tilt,
+                    zoom = if (shouldZoom) zoom else null,
+                    dontAnimate = shouldZoom
+                )
+            }
         }
     }
 
@@ -252,6 +259,9 @@ class MapsActivity : AppCompatActivity(),
         theMap!!.uiSettings.apply {
             isZoomControlsEnabled = true
         }
-        updateDisplay()
+        updateDisplay(
+            shouldChangeCamera = true,
+            shouldZoom = true
+        )
     }
 }

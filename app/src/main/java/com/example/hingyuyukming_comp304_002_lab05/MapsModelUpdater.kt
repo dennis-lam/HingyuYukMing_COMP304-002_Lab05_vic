@@ -33,6 +33,12 @@ class MapsModelUpdater(val context: Context) {
         }
     }
 
+    fun clear() {
+        placeMarker?.remove()
+        userMarker?.remove()
+        routePolyline?.remove()
+    }
+
     fun update(maps: GoogleMap, placeName: String, placeLatLng: LatLng, userLatLng: LatLng?) {
         with (maps) {
             // Set place marker
