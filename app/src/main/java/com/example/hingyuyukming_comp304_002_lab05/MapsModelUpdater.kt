@@ -1,14 +1,13 @@
 package com.example.hingyuyukming_comp304_002_lab05
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.os.AsyncTask
+import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import com.google.android.libraries.places.api.Places
 import com.google.gson.Gson
+import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -52,12 +51,54 @@ class MapsModelUpdater(val context: Context) {
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_marker))
                 )
                 // Set route
-                val urll = getDirectionURL(userLatLng, placeLatLng)
-                GetDirection(urll, this).execute()
+                CoroutineScope(Dispatchers.IO).launch {
+                    val polylineOptions = getPolylineOptions(placeLatLng, userLatLng)
+                    if (polylineOptions != null ) {
+                        // Update UI
+                        withContext(Dispatchers.Main) {
+                            routePolyline?.remove()
+                            routePolyline = maps.addPolyline(polylineOptions)
+                        }
+                    }
+                }
             }
         }
         // Mark as updated
         hasUpdated = true
+    }
+
+    private suspend fun getPolylineOptions(origin:LatLng, dest:LatLng) : PolylineOptions? {
+        // Get url
+        val url = getDirectionURL(origin, dest)
+
+        // HTTP retrieve
+        val client = OkHttpClient()
+        val request = Request.Builder().url(url).build()
+        val response = client.newCall(request).execute()
+        val data = response.body!!.string()
+
+        return try {
+            // Convert JSON to class
+            val respObj = Gson().fromJson(data,MapData::class.java)
+            val path =  ArrayList<LatLng>()
+            for (i in 0 until respObj.routes[0].legs[0].steps.size) {
+                path.addAll(decodePolyline(respObj.routes[0].legs[0].steps[i].polyline.points))
+            }
+            val result =  ArrayList<List<LatLng>>()
+            result.add(path)
+
+            // Convert to polyline options
+            return PolylineOptions().apply {
+                for (i in result.indices){
+                    addAll(result[i])
+                    width(20f)
+                    color(ContextCompat.getColor(context, R.color.purple_200))
+                    geodesic(true)
+                }
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun getDirectionURL(origin:LatLng, dest:LatLng) : String{
@@ -68,8 +109,7 @@ class MapsModelUpdater(val context: Context) {
                 "&key=$apiKey"
     }
 
-
-    fun decodePolyline(encoded: String): List<LatLng> {
+    private fun decodePolyline(encoded: String): List<LatLng> {
         val poly = ArrayList<LatLng>()
         var index = 0
         val len = encoded.length
@@ -101,6 +141,7 @@ class MapsModelUpdater(val context: Context) {
         return poly
     }
 
+    // JSON mapping classes
     class MapData {
         var routes = ArrayList<Routes>()
     }
@@ -148,41 +189,5 @@ class MapsModelUpdater(val context: Context) {
     class Location{
         var lat =""
         var lng =""
-    }
-
-    @SuppressLint("StaticFieldLeak")
-    private inner class GetDirection(val url : String, val map: GoogleMap) : AsyncTask<Void, Void, List<List<LatLng>>>(){
-        override fun doInBackground(vararg params: Void?): List<List<LatLng>> {
-
-            val client = OkHttpClient()
-            val request = Request.Builder().url(url).build()
-            val response = client.newCall(request).execute()
-            val data = response.body!!.string()
-
-            val result =  ArrayList<List<LatLng>>()
-            try{
-                val respObj = Gson().fromJson(data,MapData::class.java)
-                val path =  ArrayList<LatLng>()
-                for (i in 0 until respObj.routes[0].legs[0].steps.size){
-                    path.addAll(decodePolyline(respObj.routes[0].legs[0].steps[i].polyline.points))
-                }
-                result.add(path)
-            }catch (e:Exception){
-                e.printStackTrace()
-            }
-            return result
-        }
-
-        override fun onPostExecute(result: List<List<LatLng>>) {
-            val lineoption = PolylineOptions()
-            for (i in result.indices){
-                lineoption.addAll(result[i])
-                lineoption.width(10f)
-                lineoption.color(Color.BLUE)
-                lineoption.geodesic(true)
-            }
-            routePolyline?.remove()
-            routePolyline = map.addPolyline(lineoption)
-        }
     }
 }
