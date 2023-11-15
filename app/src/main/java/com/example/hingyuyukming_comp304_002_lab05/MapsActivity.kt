@@ -11,8 +11,6 @@ import android.widget.Toast
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
-import android.graphics.Color
-import android.os.AsyncTask
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -26,11 +24,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
-import com.google.android.libraries.places.api.Places
 import com.google.android.material.slider.Slider
-import com.google.gson.Gson
-import okhttp3.OkHttpClient
-import okhttp3.Request
 
 data class MarkersData(var placeName: String, var userLatLng: LatLng?)
 
@@ -39,16 +33,12 @@ class MapsActivity : AppCompatActivity(),
     CompoundButton.OnCheckedChangeListener {
 
     private lateinit var binding: ActivityMapsBinding
-    private lateinit var apiKey: String
 
     private var theMap: GoogleMap? = null
 
     private lateinit var theCategory: String
     private lateinit var thePlaces: Map<String, Place>
     private lateinit var thePlaceNames: List<String>
-    private var mapMarker: Marker? = null
-    private var userMarker: Marker? = null
-    private var routePolyline: com.google.android.gms.maps.model.Polyline? = null
     private var zoom = 15.0f
     private var tilt = 0.0f
 
@@ -59,7 +49,8 @@ class MapsActivity : AppCompatActivity(),
     private lateinit var locationCallback: LocationCallback
     private val locationRequestCode = 12345
 
-
+    // Declare maps model updater (e.g. markers)
+    private lateinit var mapModelUpdater: MapsModelUpdater
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,13 +121,8 @@ class MapsActivity : AppCompatActivity(),
             }
         }
 
-        // Setup Places API
-        apiKey = applicationContext.packageManager
-            .getApplicationInfo(applicationContext.packageName, PackageManager.GET_META_DATA)
-            .metaData.getString("com.google.android.geo.API_KEY")!!
-        if (!Places.isInitialized()) {
-            Places.initialize(applicationContext, apiKey)
-        }
+        // Initialize map model updater
+        mapModelUpdater = MapsModelUpdater(applicationContext)
     }
 
     // Function to get requested permissions result
@@ -222,23 +208,10 @@ class MapsActivity : AppCompatActivity(),
         binding.tvAddress.text = place.address
         // Set map
         theMap?.apply {
-            val firstTimeAddMarker = mapMarker == null
-            mapMarker?.remove()
-            mapMarker = addMarker(
-                MarkerOptions()
-                    .position(placeLatLng)
-                    .title(place.name)
-            )
-            userMarker?.remove()
-            if (userLatLng != null) {
-                userMarker = addMarker(
-                    MarkerOptions()
-                        .position(userLatLng)
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_marker))
-                )
-                val urll = getDirectionURL(userLatLng, placeLatLng, apiKey)
-                GetDirection(urll).execute()
-            }
+            val firstTimeAddMarker = mapModelUpdater.hasUpdated
+            // Update map model
+            mapModelUpdater.update(this, place.name, placeLatLng, userLatLng)
+            // TODO: Auto adjust issue after zoom
             changeCamera(
                 lat = placeLatLng.latitude,
                 lng = placeLatLng.longitude,
@@ -280,131 +253,5 @@ class MapsActivity : AppCompatActivity(),
             isZoomControlsEnabled = true
         }
         updateDisplay()
-    }
-
-    private fun getDirectionURL(origin:LatLng, dest:LatLng, secret: String) : String{
-        return "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}" +
-                "&destination=${dest.latitude},${dest.longitude}" +
-                "&sensor=false" +
-                "&mode=driving" +
-                "&key=$secret"
-    }
-
-
-    fun decodePolyline(encoded: String): List<LatLng> {
-        val poly = ArrayList<LatLng>()
-        var index = 0
-        val len = encoded.length
-        var lat = 0
-        var lng = 0
-        while (index < len) {
-            var b: Int
-            var shift = 0
-            var result = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dlat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-            lat += dlat
-            shift = 0
-            result = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dlng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-            lng += dlng
-            val latLng = LatLng((lat.toDouble() / 1E5),(lng.toDouble() / 1E5))
-            poly.add(latLng)
-        }
-        return poly
-    }
-
-    class MapData {
-        var routes = ArrayList<Routes>()
-    }
-
-    class Routes {
-        var legs = ArrayList<Legs>()
-    }
-
-    class Legs {
-        var distance = Distance()
-        var duration = Duration()
-        var end_address = ""
-        var start_address = ""
-        var end_location =Location()
-        var start_location = Location()
-        var steps = ArrayList<Steps>()
-    }
-
-    class Steps {
-        var distance = Distance()
-        var duration = Duration()
-        var end_address = ""
-        var start_address = ""
-        var end_location =Location()
-        var start_location = Location()
-        var polyline = PolyLine()
-        var travel_mode = ""
-        var maneuver = ""
-    }
-
-    class Duration {
-        var text = ""
-        var value = 0
-    }
-
-    class Distance {
-        var text = ""
-        var value = 0
-    }
-
-    class PolyLine {
-        var points = ""
-    }
-
-    class Location{
-        var lat =""
-        var lng =""
-    }
-
-    @SuppressLint("StaticFieldLeak")
-    private inner class GetDirection(val url : String) : AsyncTask<Void, Void, List<List<LatLng>>>(){
-        override fun doInBackground(vararg params: Void?): List<List<LatLng>> {
-
-            val client = OkHttpClient()
-            val request = Request.Builder().url(url).build()
-            val response = client.newCall(request).execute()
-            val data = response.body!!.string()
-
-            val result =  ArrayList<List<LatLng>>()
-            try{
-                val respObj = Gson().fromJson(data,MapData::class.java)
-                val path =  ArrayList<LatLng>()
-                for (i in 0 until respObj.routes[0].legs[0].steps.size){
-                    path.addAll(decodePolyline(respObj.routes[0].legs[0].steps[i].polyline.points))
-                }
-                result.add(path)
-            }catch (e:Exception){
-                e.printStackTrace()
-            }
-            return result
-        }
-
-        override fun onPostExecute(result: List<List<LatLng>>) {
-            val lineoption = PolylineOptions()
-            for (i in result.indices){
-                lineoption.addAll(result[i])
-                lineoption.width(10f)
-                lineoption.color(Color.BLUE)
-                lineoption.geodesic(true)
-            }
-            routePolyline?.remove()
-            routePolyline = theMap!!.addPolyline(lineoption)
-        }
     }
 }
